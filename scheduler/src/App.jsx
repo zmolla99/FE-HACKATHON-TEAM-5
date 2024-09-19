@@ -1,124 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
-import * as handTrack from 'handtrackjs';
 
-const HandScanner = ({ onLogin }) => {
+// FakeFaceScanner component to simulate face detection
+const FakeFaceScanner = ({ onLogin }) => {
   const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const [hasCamera, setHasCamera] = useState(false);
-  const [model, setModel] = useState(null);
-  const [isHandDetected, setIsHandDetected] = useState(false);
-  const [debugInfo, setDebugInfo] = useState('');
+  const [hasCamera, setHasCamera] = useState(true);
+  const [loadingModel, setLoadingModel] = useState(false);
 
-  // Access the camera
   useEffect(() => {
-    const startCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.onloadedmetadata = () => {
-            canvasRef.current.width = videoRef.current.videoWidth;
-            canvasRef.current.height = videoRef.current.videoHeight;
-          };
-          setHasCamera(true);
-          setDebugInfo(prev => prev + "\nCamera accessed successfully");
-        }
-      } catch (err) {
-        console.error("Error accessing camera: ", err);
-        setHasCamera(false);
-        setDebugInfo(prev => prev + "\nError accessing camera: " + err.message);
-      }
+    const simulateFaceDetection = () => {
+      setLoadingModel(true);
+      setTimeout(() => {
+        setLoadingModel(false);
+        onLogin();
+      }, 3000); // Simulate face detection delay of 3 seconds
     };
 
-    startCamera();
-
-    return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject;
-        const tracks = stream.getTracks();
-        tracks.forEach(track => track.stop());
-      }
-    };
-  }, []);
-
-  // Load the handtrack model
-  useEffect(() => {
-    const loadModel = async () => {
-      try {
-        const modelParams = {
-          flipHorizontal: false,
-          outputStride: 16,
-          imageScaleFactor: 1,
-          maxNumBoxes: 20,
-          iouThreshold: 0.2,
-          scoreThreshold: 0.3,
-          modelType: "ssd320fpnlite",
-          modelSize: "large",
-          bboxLineWidth: "2",
-          fontSize: 17,
-        };
-        const loadedModel = await handTrack.load(modelParams);
-        setModel(loadedModel);
-        setDebugInfo(prev => prev + "\nHandtrack model loaded successfully");
-      } catch (err) {
-        console.error("Error loading handtrack model:", err);
-        setDebugInfo(prev => prev + "\nError loading handtrack model: " + err.message);
-      }
-    };
-
-    loadModel();
-  }, []);
-
-  // Detect hands and check if they are open
-  useEffect(() => {
-    let detectionInterval;
-    const runDetection = async () => {
-      if (model && videoRef.current && canvasRef.current) {
-        try {
-          const predictions = await model.detect(videoRef.current);
-          setDebugInfo(prev => `${prev}\nPredictions: ${JSON.stringify(predictions)}`);
-
-          const ctx = canvasRef.current.getContext('2d');
-          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-
-          let handDetected = false;
-          predictions.forEach(prediction => {
-            if (prediction.label === 'open') {
-              const [x, y, width, height] = prediction.bbox;
-              ctx.beginPath();
-              ctx.rect(x, y, width, height);
-              ctx.strokeStyle = '#00ff00';
-              ctx.lineWidth = 2;
-              ctx.stroke();
-
-              // Assume hand is detected if the prediction is "open"
-              handDetected = true;
-            }
-          });
-
-          setIsHandDetected(handDetected);
-          if (handDetected && !isHandDetected) {
-            setTimeout(() => {
-              onLogin();
-            }, 1000);
-          }
-        } catch (err) {
-          console.error("Error during detection:", err);
-          setDebugInfo(prev => prev + "\nError during detection: " + err.message);
-        }
-      }
-    };
-
-    if (model && videoRef.current) {
-      detectionInterval = setInterval(runDetection, 100);
-    }
-
-    return () => {
-      if (detectionInterval) {
-        clearInterval(detectionInterval);
-      }
-    };
-  }, [model, onLogin, isHandDetected]);
+    simulateFaceDetection();
+  }, [onLogin]);
 
   return (
     <div style={{
@@ -134,12 +32,21 @@ const HandScanner = ({ onLogin }) => {
       width: '400px',
       border: '1px solid #0066cc',
     }}>
+      <div style={{
+        position: 'absolute',
+        top: '-10px',
+        left: '10px',
+        right: '10px',
+        height: '20px',
+        backgroundColor: '#0066cc',
+        clipPath: 'polygon(0% 0%, 95% 0%, 100% 100%, 5% 100%)',
+      }}></div>
       <h2 style={{
         color: '#0066cc',
         textAlign: 'center',
         marginBottom: '20px',
         fontFamily: 'Arial, sans-serif',
-      }}>Hand Scanner</h2>
+      }}>Face Scanner</h2>
       <div style={{
         position: 'relative',
         marginBottom: '20px',
@@ -154,38 +61,13 @@ const HandScanner = ({ onLogin }) => {
             backgroundColor: 'black',
           }}
         />
-        <canvas
-          ref={canvasRef}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-          }}
-        />
       </div>
-      {!hasCamera && <div style={{ color: 'red', textAlign: 'center', marginTop: '20px' }}>Unable to access camera</div>}
-      <div style={{ color: '#00ccff', textAlign: 'center', marginTop: '10px' }}>
-        {isHandDetected ? "Hand detected! Logging in..." : "Place your open hand in front of the camera"}
-      </div>
-      <div style={{
-        marginTop: '20px',
-        padding: '10px',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        color: '#00ff00',
-        fontFamily: 'monospace',
-        fontSize: '12px',
-        maxHeight: '150px',
-        overflowY: 'auto',
-      }}>
-        <pre>{debugInfo}</pre>
-      </div>
+      {loadingModel && <div style={{ color: 'white', textAlign: 'center', marginTop: '20px' }}>Simulating face scan...</div>}
     </div>
   );
 };
 
-// App component remains unchanged
+// App component
 const App = () => {
   const [text, setText] = useState('');
   const [circles, setCircles] = useState([]);
@@ -194,7 +76,7 @@ const App = () => {
   const fullText = 'Good Morning...';
 
   const handleLogin = () => {
-    console.log('Hand detected, logging in');
+    console.log('Face scan completed, logging in...');
     setIsBooting(true);
     setTimeout(() => {
       setIsBooting(false);
@@ -323,7 +205,7 @@ const App = () => {
 
   return (
     <div style={containerStyle}>
-      {!isLoggedIn && !isBooting && <HandScanner onLogin={handleLogin} />}
+      {!isLoggedIn && !isBooting && <FakeFaceScanner onLogin={handleLogin} />}
       {isBooting && (
         <div style={bootScreenStyle}>
           <div>Initializing systems...</div>
