@@ -1,0 +1,9 @@
+html,
+body {
+    overflow: hidden;
+    background-color: rgba(0, 51, 102, 0.7);
+}
+
+::-webkit-scrollbar {
+    display: none;
+}
