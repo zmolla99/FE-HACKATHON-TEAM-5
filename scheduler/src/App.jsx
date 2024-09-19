@@ -308,7 +308,7 @@ const FakeFaceScanner = ({ onLogin, onImageCaptured }) => {
         textAlign: 'center',
         marginBottom: '20px',
         fontFamily: 'Arial, sans-serif',
-      }}>Face Scanner</h2>
+      }}>Welcome to FirstUp!</h2>
       <div style={{
         position: 'relative',
         marginBottom: '20px',
@@ -370,7 +370,7 @@ const FakeFaceScanner = ({ onLogin, onImageCaptured }) => {
           Start Scan
         </button>
       )}
-      {loadingModel && <div style={{ color: 'white', textAlign: 'center', marginTop: '20px' }}>Simulating face scan...</div>}
+      {loadingModel && <div style={{ color: 'white', textAlign: 'center', marginTop: '20px' }}>Face Scan In Progress...</div>}
       {!hasCamera && <div style={{ color: 'red', textAlign: 'center', marginTop: '20px' }}>Unable to access camera</div>}
     </div>
   );
@@ -609,7 +609,7 @@ const App = () => {
             </svg>
           ))}
           <img
-            src='/public/images/nucleus.png'
+            src='https://github.com/zmolla99/nuc/blob/main/nucleus.png?raw=true'
             style={{
               width: '200px',
               position: 'absolute',
